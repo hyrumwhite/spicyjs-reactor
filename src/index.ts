@@ -9,9 +9,8 @@ type Reactor<T> = {
  *
  */
 
-const executeEffects = <T>(proxy: { value: any }, effects: Effect[]) => {
-	for (let i = 0; i < effects.length; i++) {
-		const effect = effects[i];
+const executeEffects = <T>(proxy: { value: any }, effects: Set<Effect>) => {
+	for (const effect of effects) {
 		if (typeof effect === "function") {
 			effect(proxy.value);
 		} else if (effect instanceof HTMLElement) {
@@ -44,10 +43,10 @@ const collectionProxy = <T extends object>(obj: T, effects: Effect[]) => {
 let updateFunctionProxy = (<T>(proxy: { value: T }, value: T) => {}) | null;
 let activeProxy = null as null | Reactor<T>;
 const proxyUpdateMap = new WeakMap<Reactor<T>, () => void>();
-const proxyDependencyMap = new WeakMap<Reactor<T>, WeakSet<Reactor<T>>>();
+const proxyAncestorMap = new Map<Reactor<T>, Set<Reactor<T>>>();
 
 const reactor = <T>(initialState: T) => {
-	const effects = [];
+	const effects = new Set<Effect>();
 	const initialStateType = typeof initialState;
 	const isInitialStateFunction = initialStateType === "function";
 	let state =
@@ -61,26 +60,30 @@ const reactor = <T>(initialState: T) => {
 		if (typeof effect === "undefined") {
 			effect = document.createTextNode("");
 		}
-		effects.push(effect);
+		effects.add(effect);
 		return effect;
 	};
 	const getHandler = {
+		_isReactor: true,
 		value(target: typeof registerEffect) {
 			if (updateFunctionProxy) {
+				proxyAncestorMap.get(activeProxy).add(target);
 				target(updateFunctionProxy);
 			}
 			return state;
 		},
 		removeEffect() {
-			return (effect: Effect) => {
-				const index = effects.indexOf(effect);
-				if (index > -1) {
-					effects.splice(index, 1);
-				}
-			};
+			return (effect: Effect) => effects.delete(effect);
 		},
 		destroy() {
-			return () => effects.splice(0, effects.length);
+			return () => {
+				for (const ancestor of proxyAncestorMap.get(proxy)) {
+					ancestor.removeEffect(proxyUpdateMap.get(proxy));
+				}
+				proxyAncestorMap.delete(proxy);
+				proxyUpdateMap.delete(proxy);
+				effects.clear();
+			};
 		},
 	};
 	const proxy = new Proxy(registerEffect, {
@@ -103,11 +106,17 @@ const reactor = <T>(initialState: T) => {
 	if (isInitialStateFunction) {
 		updateFunctionProxy = () => (proxy.value = initialState());
 		activeProxy = proxy;
+		proxyAncestorMap.set(proxy, new Set());
+		proxyUpdateMap.set(proxy, updateFunctionProxy);
 		updateFunctionProxy();
 		updateFunctionProxy = null;
 		activeProxy = null;
 	}
 	return proxy as unknown as typeof registerEffect & Reactor<T>;
 };
-
+export const meltdown = (...reactors: Reactor<any>[]) => {
+	for (const reactor of reactors) {
+		reactor.destroy();
+	}
+};
 export default reactor;

@@ -4,10 +4,6 @@ type Reactor<T> = {
 	removeEffect: (effect: Effect) => void;
 	destroy: () => void;
 };
-/*
- *Idea here is to have a proxy that auto updates elements and text nodes with an optional function that will execute
- *
- */
 
 const executeEffects = <T>(proxy: { value: any }, effects: Set<Effect>) => {
 	for (const effect of effects) {
@@ -20,19 +16,20 @@ const executeEffects = <T>(proxy: { value: any }, effects: Set<Effect>) => {
 		}
 	}
 };
-const collectionProxy = <T extends object>(obj: T, effects: Effect[]) => {
+const collectionProxy = <T extends object>(obj: T, effects: Set<Effect>) => {
 	const proxy = new Proxy(obj, {
 		get(target, key) {
 			if (typeof target[key] === "function") {
 				return (item) => {
-					Reflect.apply(value, target, [item]);
+					const returnValue = Reflect.apply(target[key], target, [item]);
 					executeEffects({ value: obj }, effects);
+					return returnValue;
 				};
 			}
 			return Reflect.get(target, key);
 		},
 		set(target, key, value) {
-			Reflect.set(target, key, value); // Use reflection to set the value
+			Reflect.set(target, key, value);
 			executeEffects({ value: obj }, effects);
 			return true;
 		},
@@ -40,12 +37,13 @@ const collectionProxy = <T extends object>(obj: T, effects: Effect[]) => {
 	return proxy as unknown as ((effect: Effect) => void) & { value: T };
 };
 
-let updateFunctionProxy = (<T>(proxy: { value: T }, value: T) => {}) | null;
+let updateFunctionProxy: (<T>(proxy: { value: T }, value: T) => {}) | null =
+	null;
 let activeProxy = null as null | Reactor<T>;
 const proxyUpdateMap = new WeakMap<Reactor<T>, () => void>();
 const proxyAncestorMap = new Map<Reactor<T>, Set<Reactor<T>>>();
 
-const reactor = <T>(initialState: T) => {
+export const reactor = <T>(initialState: T) => {
 	const effects = new Set<Effect>();
 	const initialStateType = typeof initialState;
 	const isInitialStateFunction = initialStateType === "function";
@@ -119,4 +117,3 @@ export const meltdown = (...reactors: Reactor<any>[]) => {
 		reactor.destroy();
 	}
 };
-export default reactor;

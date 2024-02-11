@@ -1,3 +1,7 @@
+type RegisterEffect = {
+	(): Text;
+	<T extends Effect>(effect: T): T;
+};
 type Effect = HTMLElement | Text | (() => void);
 type Reactor<T> = {
 	value: T;
@@ -54,13 +58,14 @@ export const reactor = <T>(initialState: T) => {
 			? null
 			: initialState;
 
-	const registerEffect = <T extends Effect>(effect?: Effect) => {
-		if (typeof effect === "undefined") {
+	const registerEffect: RegisterEffect = (effect: any) => {
+		if (!effect) {
 			effect = document.createTextNode("");
 		}
 		effects.add(effect);
 		return effect;
 	};
+
 	const getHandler = {
 		_isReactor: true,
 		value(target: typeof registerEffect) {
@@ -110,7 +115,7 @@ export const reactor = <T>(initialState: T) => {
 		updateFunctionProxy = null;
 		activeProxy = null;
 	}
-	return proxy as unknown as typeof registerEffect & Reactor<T>;
+	return proxy as unknown as RegisterEffect & Reactor<T>;
 };
 export const meltdown = (...reactors: Reactor<any>[]) => {
 	for (const reactor of reactors) {

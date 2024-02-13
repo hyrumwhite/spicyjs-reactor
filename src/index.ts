@@ -13,7 +13,7 @@ type Reactor<T> = Accessor<T> & RegisterEffect;
 const executeEffects = <T>(proxy: { value: any }, effects: Set<Effect>) => {
 	for (const effect of effects) {
 		if (typeof effect === "function") {
-			effect(proxy.value);
+			effect();
 		} else if (effect instanceof HTMLElement) {
 			effect.textContent = proxy.value.toString();
 		} else if (effect instanceof Text) {
@@ -24,9 +24,11 @@ const executeEffects = <T>(proxy: { value: any }, effects: Set<Effect>) => {
 const collectionProxy = <T extends object>(obj: T, effects: Set<Effect>) => {
 	const proxy = new Proxy(obj, {
 		get(target, key) {
-			if (typeof target[key] === "function") {
-				return (item) => {
-					const returnValue = Reflect.apply(target[key], target, [item]);
+			//@ts-ignore
+			if (key in target && typeof target[key] === "function") {
+				return (...args: unknown[]) => {
+					//@ts-ignore
+					const returnValue = Reflect.apply(target[key], target, args);
 					executeEffects({ value: obj }, effects);
 					return returnValue;
 				};
@@ -43,22 +45,22 @@ const collectionProxy = <T extends object>(obj: T, effects: Set<Effect>) => {
 };
 
 let activeEffectFn: (() => void) | null = null;
-let activeProxy = null as null | Reactor<T>;
-const proxyUpdateMap = new WeakMap<Reactor<T>, () => void>();
-const proxyAncestorMap = new Map<Reactor<T>, Set<Reactor<T>>>();
+let activeProxy = null as null | Reactor<unknown>;
+const proxyUpdateMap = new WeakMap<Reactor<unknown>, () => void>();
+const proxyAncestorMap = new Map<Reactor<unknown>, Set<Reactor<unknown>>>();
 
 export const reactor = <T>(initialState: T) => {
 	const effects = new Set<Effect>();
 	const initialStateType = typeof initialState;
 	const isInitialStateFunction = initialStateType === "function";
 	let state =
-		initialStateType === "object" && initialState !== null
+		initialStateType === "object" && initialState !== null && initialState
 			? collectionProxy(initialState, effects)
 			: isInitialStateFunction
 			? null
 			: initialState;
 
-	const registerEffect: RegisterEffect = (effect: any) => {
+	const registerEffect: RegisterEffect = (effect?: any) => {
 		if (!effect) {
 			effect = document.createTextNode("");
 		}
@@ -68,9 +70,12 @@ export const reactor = <T>(initialState: T) => {
 
 	const getHandler = {
 		_isReactor: true,
-		value(target: typeof registerEffect) {
+		value(target: RegisterEffect) {
 			if (activeEffectFn) {
-				proxyAncestorMap.get(activeProxy).add(target);
+				const ancestors = proxyAncestorMap.get(activeProxy);
+				if (ancestors) {
+					ancestors.add(target);
+				}
 				target(activeEffectFn);
 			}
 			return state;
@@ -80,8 +85,12 @@ export const reactor = <T>(initialState: T) => {
 		},
 		destroy() {
 			return () => {
-				for (const ancestor of proxyAncestorMap.get(proxy)) {
-					ancestor.removeEffect(proxyUpdateMap.get(proxy));
+				const ancestors = proxyAncestorMap.get(proxy) || [];
+				for (const ancestor of ancestors) {
+					const effect = proxyUpdateMap.get(proxy);
+					if (effect) {
+						ancestor.removeEffect(effect);
+					}
 				}
 				proxyAncestorMap.delete(proxy);
 				proxyUpdateMap.delete(proxy);
@@ -89,10 +98,15 @@ export const reactor = <T>(initialState: T) => {
 			};
 		},
 	};
+	type GetHandlerKey = keyof typeof getHandler;
 	const proxy = new Proxy(registerEffect, {
 		get(target, key, receiver) {
 			if (typeof key === "string" && key in getHandler) {
-				return getHandler[key](target);
+				const handler = getHandler[key as GetHandlerKey];
+				if (typeof handler === "function") {
+					return handler(target);
+				}
+				return getHandler[key as GetHandlerKey];
 			}
 			return Reflect.get(target, key, receiver);
 		},

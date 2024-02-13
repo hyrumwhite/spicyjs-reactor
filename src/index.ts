@@ -2,12 +2,13 @@ type RegisterEffect = {
 	(): Text;
 	<T extends Effect>(effect: T): T;
 };
-type Effect = HTMLElement | Text | (() => void);
-type Reactor<T> = {
+type Accessor<T> = {
 	value: T;
 	removeEffect: (effect: Effect) => void;
 	destroy: () => void;
 };
+type Effect = HTMLElement | Text | (() => void);
+type Reactor<T> = Accessor<T> & RegisterEffect;
 
 const executeEffects = <T>(proxy: { value: any }, effects: Set<Effect>) => {
 	for (const effect of effects) {
@@ -41,8 +42,7 @@ const collectionProxy = <T extends object>(obj: T, effects: Set<Effect>) => {
 	return proxy as unknown as ((effect: Effect) => void) & { value: T };
 };
 
-let updateFunctionProxy: (<T>(proxy: { value: T }, value: T) => {}) | null =
-	null;
+let activeEffectFn: (() => void) | null = null;
 let activeProxy = null as null | Reactor<T>;
 const proxyUpdateMap = new WeakMap<Reactor<T>, () => void>();
 const proxyAncestorMap = new Map<Reactor<T>, Set<Reactor<T>>>();
@@ -69,9 +69,9 @@ export const reactor = <T>(initialState: T) => {
 	const getHandler = {
 		_isReactor: true,
 		value(target: typeof registerEffect) {
-			if (updateFunctionProxy) {
+			if (activeEffectFn) {
 				proxyAncestorMap.get(activeProxy).add(target);
-				target(updateFunctionProxy);
+				target(activeEffectFn);
 			}
 			return state;
 		},
@@ -90,32 +90,37 @@ export const reactor = <T>(initialState: T) => {
 		},
 	};
 	const proxy = new Proxy(registerEffect, {
-		get(target, key) {
-			if (key in getHandler) {
+		get(target, key, receiver) {
+			if (typeof key === "string" && key in getHandler) {
 				return getHandler[key](target);
 			}
+			return Reflect.get(target, key, receiver);
 		},
-		set(target, key, value) {
-			state = value;
-			executeEffects(proxy, effects);
-			return true;
+		set(target, key, value, receiver) {
+			if (key === "value") {
+				state = value;
+				executeEffects(proxy, effects);
+				return true;
+			} else {
+				return Reflect.set(target, key, value, receiver);
+			}
 		},
-		apply(target, thisArg, args) {
+		apply(target, thisArg, args: [effect: Effect]) {
 			const value = target.apply(thisArg, args);
 			executeEffects(proxy, effects);
 			return value;
 		},
-	});
+	}) as unknown as Reactor<T>;
 	if (isInitialStateFunction) {
-		updateFunctionProxy = () => (proxy.value = initialState());
+		activeEffectFn = () => (proxy.value = (initialState as Function)());
 		activeProxy = proxy;
 		proxyAncestorMap.set(proxy, new Set());
-		proxyUpdateMap.set(proxy, updateFunctionProxy);
-		updateFunctionProxy();
-		updateFunctionProxy = null;
+		proxyUpdateMap.set(proxy, activeEffectFn);
+		activeEffectFn();
+		activeEffectFn = null;
 		activeProxy = null;
 	}
-	return proxy as unknown as RegisterEffect & Reactor<T>;
+	return proxy;
 };
 export const meltdown = (...reactors: Reactor<any>[]) => {
 	for (const reactor of reactors) {

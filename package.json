@@ -3,9 +3,23 @@
 	"private": true,
 	"version": "0.0.0",
 	"type": "module",
+	"types": "dist/types",
+	"main": "dist/index.js",
+	"sideeffects": false,
+	"keywords": [
+		"vanillajs",
+		"buildless",
+		"framework",
+		"createElement",
+		"reactivity"
+	],
+	"files": [
+		"dist",
+		"README.md"
+	],
 	"scripts": {
 		"dev": "vite",
-		"build": "tsc && vite build",
+		"build": "vite build && tsc",
 		"preview": "vite preview",
 		"release": "vite build && tsc && commit-and-tag-version && npm publish"
 	},

@@ -72,9 +72,11 @@ export const reactor = <T>(initialState: T) => {
 		_isReactor: true,
 		value(target: RegisterEffect) {
 			if (activeEffectFn) {
-				const ancestors = proxyAncestorMap.get(activeProxy);
-				if (ancestors) {
-					ancestors.add(target);
+				if (activeProxy) {
+					const ancestors = proxyAncestorMap.get(activeProxy);
+					if (ancestors) {
+						ancestors.add(proxy);
+					}
 				}
 				target(activeEffectFn);
 			}

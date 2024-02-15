@@ -12,9 +12,9 @@ const thing = count(span);
 const button = document.createElement("button");
 
 const thingy = reactor([1, 2]);
-
+const item = thingy(button);
+const text = thingy();
 document.body.append("asdf", thingy());
-thingy.value.test2 = 30;
 const updateThingyButton = document.createElement("button");
 updateThingyButton.textContent = "Update Thingy";
 updateThingyButton.addEventListener("click", () => {

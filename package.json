@@ -1,7 +1,6 @@
 {
 	"name": "@spicyjs/reactor",
-	"private": true,
-	"version": "0.0.0",
+	"version": "0.0.2",
 	"type": "module",
 	"types": "dist/types",
 	"main": "dist/index.js",
@@ -24,6 +23,7 @@
 		"release": "vite build && tsc && commit-and-tag-version && npm publish"
 	},
 	"devDependencies": {
+		"commit-and-tag-version": "^12.2.0",
 		"typescript": "^5.2.2",
 		"vite": "^5.0.8"
 	}

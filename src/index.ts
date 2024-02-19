@@ -30,7 +30,9 @@ const collectionProxy = <T extends object>(obj: T, effects: Set<Effect>) => {
 					//@ts-ignore
 					const returnValue = Reflect.apply(target[key], target, args);
 					executeEffects({ value: obj }, effects);
-					return returnValue;
+					return typeof returnValue === "object" && returnValue !== null
+						? collectionProxy(returnValue, effects)
+						: returnValue;
 				};
 			}
 			return Reflect.get(target, key);

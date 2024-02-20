@@ -1,6 +1,6 @@
 type RegisterEffect = {
 	(): Text;
-	<T extends Effect>(effect: T): T;
+	<T extends Effect>(effect: T, effectHandler?: (effect: T) => void): T;
 };
 type Accessor<T> = {
 	value: T;
@@ -21,7 +21,7 @@ const executeEffects = <T>(proxy: { value: any }, effects: Set<Effect>) => {
 		}
 	}
 };
-const collectionProxy = <T extends object>(obj: T, effects: Set<Effect>) => {
+const collectionProxy = <T extends object>(obj: T, effects: Set<Effect>): T => {
 	const proxy = new Proxy(obj, {
 		get(target, key) {
 			//@ts-ignore
@@ -30,12 +30,13 @@ const collectionProxy = <T extends object>(obj: T, effects: Set<Effect>) => {
 					//@ts-ignore
 					const returnValue = Reflect.apply(target[key], target, args);
 					executeEffects({ value: obj }, effects);
-					return typeof returnValue === "object" && returnValue !== null
-						? collectionProxy(returnValue, effects)
-						: returnValue;
+					return returnValue;
 				};
 			}
-			return Reflect.get(target, key);
+			const returnValue = Reflect.get(target, key);
+			return typeof returnValue === "object" && returnValue !== null
+				? collectionProxy(returnValue, effects)
+				: returnValue;
 		},
 		set(target, key, value) {
 			Reflect.set(target, key, value);
@@ -43,7 +44,7 @@ const collectionProxy = <T extends object>(obj: T, effects: Set<Effect>) => {
 			return true;
 		},
 	});
-	return proxy as unknown as ((effect: Effect) => void) & { value: T };
+	return proxy as unknown as T;
 };
 
 let activeEffectFn: (() => void) | null = null;
@@ -62,11 +63,16 @@ export const reactor = <T>(initialState: T) => {
 			? null
 			: initialState;
 
-	const registerEffect: RegisterEffect = (effect?: any) => {
+	const registerEffect: RegisterEffect = (
+		effect?: any,
+		effectHandler?: any
+	) => {
 		if (!effect) {
 			effect = document.createTextNode("");
 		}
-		effects.add(effect);
+		effects.add(
+			typeof effectHandler === "function" ? () => effectHandler(effect) : effect
+		);
 		return effect;
 	};
 

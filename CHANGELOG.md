@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.0.5](https://github.com/hyrumwhite/spicyjs-reactor/compare/v0.0.4...v0.0.5) (2024-02-20)
+
+
+### Features
+
+* recursive object reactors ([77f3c90](https://github.com/hyrumwhite/spicyjs-reactor/commit/77f3c902f82d9e1a17c7459897aedcca7ebfe37a))
+
+
+### Bug Fixes
+
+* nested object reactivity ([1cd5ca0](https://github.com/hyrumwhite/spicyjs-reactor/commit/1cd5ca05c9a8392f0b37b17017e5460c2a29df0f))
+
 ## [0.0.4](https://github.com/hyrumwhite/spicyjs-reactor/compare/v0.0.3...v0.0.4) (2024-02-16)
 
 ## [0.0.3](https://github.com/hyrumwhite/spicyjs-reactor/compare/v0.0.2...v0.0.3) (2024-02-16)

@@ -1,10 +1,19 @@
 {
 	"name": "@spicyjs/reactor",
-	"version": "0.0.5",
-	"private": false,
+	"version": "1.0.0",
 	"type": "module",
-	"types": "dist/types",
+	"types": "dist/types/index.d.ts",
 	"main": "dist/index.js",
+	"module": "dist/index.js",
+	"exports": {
+		".": {
+			"types": "./dist/types/index.d.ts",
+			"import": {
+				"node": "./dist/index.js",
+				"default": "./dist/index.js"
+			}
+		}
+	},
 	"sideeffects": false,
 	"keywords": [
 		"vanillajs",

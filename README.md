@@ -1,14 +1,14 @@
 # SpicyJS
 
-Package is still under construction. The API won't change but tests will be added, types will be made more robust, etc.
+SpicyJS is a buildless microframework with a VanillaJS mental model that consists of a few tiny packages:
 
-SpicyJS is a lightweight, buildless JavaScript library that takes the pain out of creating and updating elements.
+- @spicyjs/core: a JS library that takes the pain out of creating, updating, and attaching listeners to elements. (~1kb uncompressed)
+- @spicyjs/reactor: a Reactive library that binds data to nodes (~1kb before gzip uncompressed)
+- @spicyjs/router: a lightweight router for SPA's (~2kb before gzip uncompressed)
 
 ## Why
 
-Vanilla JS is very attractive. If done correctly, its the fastest and lightest JS option. But, default apis for creating, modifying, and updating elements are clunky and difficult to read through. SpicyJS is a lightweight way to spice up VanillaJS without going too far off the deep end. The core and reactivity libraries are ~1kb each, and if you're like me, you'd probably end up creating something similar anyway in your Vanilla journey.
-
-Note: if you find you need a more standard or complex approach, I highly recommend Preact, though it's more of a full on dessert than a dash of spice in your Vanilla :)
+Reactiviy allows for fast, low boilerplate DOM updates. A reactivity system helps to avoid bad practices like using DOM as state. Spicy reactivity is proxy based and only targets the DOM elements you specify. There is no virtual DOM, queue flush or render flow. Changes are propagated immediately to the DOM.
 
 ## Installation
 
@@ -19,14 +19,6 @@ npm i @spicyjs/reactor;
 Reactivity is Proxy based. You create a reactor by invoking the reactor function, similar to a Vue ref. The resulting variable is a function with a value property.
 
 If invoked as a function, a side effect is added. A side effect may be a text node, an HTMLElement, or a function.
-
-```ts
-type Reactor = (initialState: string | bool | number | (() => void)) => ((
-	effect: HTMLElement | Text | (() => void)
-) => effect) & {
-	value: typeof initialState | ReturnType<typeof initialState>;
-};
-```
 
 ```ts
 import spicy from "@spicyjs/core";
@@ -70,4 +62,14 @@ export const fullNameGenerator = () =>
 			input: ($event) => (lastName.value = $event.target.value),
 		})
 	);
+```
+
+Full type:
+
+```ts
+type Reactor = (initialState: string | bool | number | (() => void)) => ((
+	effect: HTMLElement | Text | (() => void)
+) => effect) & {
+	value: typeof initialState | ReturnType<typeof initialState>;
+};
 ```

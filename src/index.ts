@@ -9,10 +9,11 @@ type Accessor<T> = {
 };
 type Effect = HTMLElement | Text | (() => void);
 type Reactor<T> = Accessor<T> & RegisterEffect;
-
+const FUNCTION_TYPE = "function" as const;
+const OBJECT_TYPE = "object" as const;
 const executeEffects = <T>(proxy: { value: any }, effects: Set<Effect>) => {
 	for (const effect of effects) {
-		if (typeof effect === "function") {
+		if (typeof effect === FUNCTION_TYPE) {
 			effect();
 		} else if (effect instanceof HTMLElement) {
 			effect.textContent = proxy.value.toString();
@@ -25,7 +26,7 @@ const collectionProxy = <T extends object>(obj: T, effects: Set<Effect>): T => {
 	const proxy = new Proxy(obj, {
 		get(target, key) {
 			//@ts-ignore
-			if (key in target && typeof target[key] === "function") {
+			if (key in target && typeof target[key] === FUNCTION_TYPE) {
 				return (...args: unknown[]) => {
 					//@ts-ignore
 					const returnValue = Reflect.apply(target[key], target, args);
@@ -34,7 +35,7 @@ const collectionProxy = <T extends object>(obj: T, effects: Set<Effect>): T => {
 				};
 			}
 			const returnValue = Reflect.get(target, key);
-			return typeof returnValue === "object" && returnValue !== null
+			return typeof returnValue === OBJECT_TYPE && returnValue !== null
 				? collectionProxy(returnValue, effects)
 				: returnValue;
 		},
@@ -55,9 +56,9 @@ const proxyAncestorMap = new Map<Reactor<unknown>, Set<Reactor<unknown>>>();
 export const reactor = <T>(initialState: T) => {
 	const effects = new Set<Effect>();
 	const initialStateType = typeof initialState;
-	const isInitialStateFunction = initialStateType === "function";
+	const isInitialStateFunction = initialStateType === FUNCTION_TYPE;
 	let state =
-		initialStateType === "object" && initialState !== null && initialState
+		initialStateType === OBJECT_TYPE && initialState !== null && initialState
 			? collectionProxy(initialState, effects)
 			: isInitialStateFunction
 			? null
@@ -71,7 +72,9 @@ export const reactor = <T>(initialState: T) => {
 			effect = document.createTextNode("");
 		}
 		effects.add(
-			typeof effectHandler === "function" ? () => effectHandler(effect) : effect
+			typeof effectHandler === FUNCTION_TYPE
+				? () => effectHandler(effect)
+				: effect
 		);
 		return effect;
 	};
@@ -113,7 +116,7 @@ export const reactor = <T>(initialState: T) => {
 		get(target, key, receiver) {
 			if (typeof key === "string" && key in getHandler) {
 				const handler = getHandler[key as GetHandlerKey];
-				if (typeof handler === "function") {
+				if (typeof handler === FUNCTION_TYPE) {
 					return handler(target);
 				}
 				return getHandler[key as GetHandlerKey];
@@ -145,9 +148,4 @@ export const reactor = <T>(initialState: T) => {
 		activeProxy = null;
 	}
 	return proxy;
-};
-export const meltdown = (...reactors: Reactor<any>[]) => {
-	for (const reactor of reactors) {
-		reactor.destroy();
-	}
 };

@@ -44,9 +44,6 @@ const effect = fullName(() => console.log("full name updated!"));
 // OR
 // fullName.destroy();
 // lastName.destroy(); //etc
-// OR
-// import { meltdown } from @spicyjs/reactor;
-// meltdown(firstName, lastName, fullName);
 
 export const fullNameGenerator = () =>
 	div(

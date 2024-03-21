@@ -14,7 +14,7 @@ const OBJECT_TYPE = "object" as const;
 const executeEffects = <T>(proxy: { value: any }, effects: Set<Effect>) => {
 	for (const effect of effects) {
 		if (typeof effect === FUNCTION_TYPE) {
-			effect();
+			(effect as Function)();
 		} else if (effect instanceof HTMLElement) {
 			effect.textContent = proxy.value.toString();
 		} else if (effect instanceof Text) {
@@ -36,7 +36,7 @@ const collectionProxy = <T extends object>(obj: T, effects: Set<Effect>): T => {
 			}
 			const returnValue = Reflect.get(target, key);
 			return typeof returnValue === OBJECT_TYPE && returnValue !== null
-				? collectionProxy(returnValue, effects)
+				? collectionProxy(returnValue as object, effects)
 				: returnValue;
 		},
 		set(target, key, value) {
@@ -117,7 +117,7 @@ export const reactor = <T>(initialState: T) => {
 			if (typeof key === "string" && key in getHandler) {
 				const handler = getHandler[key as GetHandlerKey];
 				if (typeof handler === FUNCTION_TYPE) {
-					return handler(target);
+					return (handler as Function)(target);
 				}
 				return getHandler[key as GetHandlerKey];
 			}

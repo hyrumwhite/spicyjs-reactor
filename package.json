@@ -14,7 +14,7 @@
 			}
 		}
 	},
-	"sideeffects": false,
+	"sideEffects": false,
 	"keywords": [
 		"vanillajs",
 		"buildless",

@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.0.2](https://github.com/hyrumwhite/spicyjs-reactor/compare/v1.0.1...v1.0.2) (2024-03-21)
+
+
+### Bug Fixes
+
+* remove meltdown function to reduce package size ([bfb3365](https://github.com/hyrumwhite/spicyjs-reactor/commit/bfb33656ecbc195a46b46bd0bdb716556175cf57))
+
 ## [1.0.1](https://github.com/hyrumwhite/spicyjs-reactor/compare/v0.0.5...v1.0.1) (2024-03-21)
 
 

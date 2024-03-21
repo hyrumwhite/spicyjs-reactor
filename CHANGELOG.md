@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.0.3](https://github.com/hyrumwhite/spicyjs-reactor/compare/v1.0.2...v1.0.3) (2024-03-21)
+
+
+### Bug Fixes
+
+* indicated package is side effect free ([b0e5a50](https://github.com/hyrumwhite/spicyjs-reactor/commit/b0e5a504b89d9c1e0ec6610119019bd1c7c457f5))
+
 ## [1.0.2](https://github.com/hyrumwhite/spicyjs-reactor/compare/v1.0.1...v1.0.2) (2024-03-21)
 
 

@@ -2,6 +2,8 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.0.5](https://github.com/hyrumwhite/spicyjs-reactor/compare/v1.0.4...v1.0.5) (2024-04-16)
+
 ## [1.0.4](https://github.com/hyrumwhite/spicyjs-reactor/compare/v1.0.3...v1.0.4) (2024-04-16)
 
 

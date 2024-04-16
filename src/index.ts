@@ -22,9 +22,13 @@ const executeEffects = <T>(proxy: { value: any }, effects: Set<Effect>) => {
 		}
 	}
 };
+const collectionRawSymbol = Symbol("raw");
 const collectionProxy = <T extends object>(obj: T, effects: Set<Effect>): T => {
 	const proxy = new Proxy(obj, {
 		get(target, key) {
+			if (key === collectionRawSymbol) {
+				return target;
+			}
 			//@ts-ignore
 			if (key in target && typeof target[key] === FUNCTION_TYPE) {
 				return (...args: unknown[]) => {
@@ -114,6 +118,10 @@ export const reactor = <T>(initialState: T) => {
 	type GetHandlerKey = keyof typeof getHandler;
 	const proxy = new Proxy(registerEffect, {
 		get(target, key, receiver) {
+			if (state && key === "raw") {
+				//@ts-ignore
+				return state[collectionRawSymbol] || state;
+			}
 			if (typeof key === "string" && key in getHandler) {
 				const handler = getHandler[key as GetHandlerKey];
 				if (typeof handler === FUNCTION_TYPE) {

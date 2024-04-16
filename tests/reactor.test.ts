@@ -71,3 +71,10 @@ test("Reactors invoked with an element and a function should run the function as
 	expect(returnedElement).toBe(element);
 	expect(returnedElement.className).toBe("hello");
 });
+
+test("Array reactors should not invoke effects when methods are run", () => {
+	const r = reactor([1, 2, 3, 4]);
+	const effect = r(() => {
+		console.log(r.raw.map(() => 1));
+	});
+});

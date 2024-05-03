@@ -20,7 +20,7 @@ Reactivity is Proxy based. You create a reactor by invoking the reactor function
 
 If invoked as a function, a side effect is added. A side effect may be a text node, an HTMLElement, or a function.
 
-Note that object and array require some special handling if accessed within their own effects.
+Note that objects and arrays require some special handling if accessed within their own effects.
 
 ```ts
 import spicy from "@spicyjs/core";

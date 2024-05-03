@@ -14,6 +14,10 @@
 			}
 		}
 	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/hyrumwhite/spicyjs-reactor"
+	},
 	"sideEffects": false,
 	"keywords": [
 		"vanillajs",
